@@ -1,0 +1,104 @@
+🔄 Dữ liệu từ server → web
+📌 Danh sách clients ban đầu
+{
+  "event": "clients_list",
+  "clients": [
+    {
+      "id": "PC1",
+      "hostname": "DESKTOP-123",
+      "ip": "192.168.1.10",
+      "process_status": "running",
+      "cpu": 35.4,
+      "ram": 62.1,
+      "threads": 12,
+      "last_update": "2025-09-22T15:30:10Z",
+      "jobs": {
+        "ok": 1500,
+        "fail": 20,
+        "remaining": 300,
+        "all": 1820
+      }
+    },
+    {
+      "id": "PC2",
+      "hostname": "LAPTOP-456",
+      "ip": "192.168.1.11",
+      "process_status": "stopped",
+      "cpu": 0,
+      "ram": 0,
+      "threads": 0,
+      "last_update": "2025-09-22T15:29:50Z",
+      "jobs": {
+        "ok": 0,
+        "fail": 0,
+        "remaining": 0,
+        "all": 0
+      }
+    }
+  ]
+}
+
+📌 Cập nhật realtime từng client
+{
+  "event": "status_update",
+  "client": "PC1",
+  "process_status": "running",
+  "cpu": 48.2,
+  "ram": 70.5,
+  "threads": 15,
+  "last_update": "2025-09-22T15:32:05Z",
+  "jobs": {
+    "ok": 1600,
+    "fail": 22,
+    "remaining": 250,
+    "all": 1872
+  }
+}
+
+🔧 Lệnh từ web → server
+
+Bắt đầu tool:
+
+{
+  "command": "start",
+  "target": "PC1"
+}
+
+
+Dừng tool:
+
+{
+  "command": "stop",
+  "target": "PC1"
+}
+
+
+Xuất dữ liệu:
+
+{
+  "command": "export",
+  "target": "PC1",
+  "format": "csv"
+}
+
+📦 Kết quả export
+{
+  "event": "export_ready",
+  "target": "PC1",
+  "file_url": "http://server:8000/files/PC1_export_20250922.csv",
+  "rows": 20000,
+  "format": "csv"
+}
+
+
+👉 Như vậy, web UI có thể:
+
+Bảng danh sách client (hostname, ip, process_status, CPU, RAM, Threads, OK/Fail/Remaining/All).
+
+Realtime update (nhận status_update).
+
+Nút Start/Stop để điều khiển.
+
+Nút Export để lấy CSV/TXT từ client.
+
+dùng Web socket để kết nối và xử lý
