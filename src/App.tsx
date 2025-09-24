@@ -444,6 +444,7 @@ function App() {
                   e.stopPropagation();
                   client.process_status === 'running' ? handleStopClient(client.id) : handleStartClient(client.id);
                 }}
+                disabled={true}
                 size="small"
                 style={{
                   color: client.process_status === 'running' ? '#ff4d4f' : '#52c41a',
@@ -460,6 +461,7 @@ function App() {
                   openExportModal(client);
                 }}
                 size="small"
+                disabled={true}
                 style={{ color: '#1890ff' }}
               />
             </Tooltip>
@@ -687,7 +689,7 @@ function App() {
           </Space>
           <Space>
             <Badge
-              dot={isConnected}
+              // dot={isConnected}
               color={isConnected ? "#52c41a" : "#ff4d4f"}
             >
               <Button
