@@ -179,7 +179,7 @@ function App() {
 
       const connectWebSocket = () => {
         // Initialize WebSocket connection
-        const ws = new WebSocket('ws://brosup-gma.brosupdigital.com/ws/web');
+        const ws = new WebSocket('wss://brosup-gma.brosupdigital.com/ws/web');
         
         ws.onopen = () => {
           setIsConnected(true);
