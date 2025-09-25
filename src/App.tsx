@@ -872,7 +872,7 @@ function App() {
                     onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
                     style={{ marginLeft: 8 }}
                   >
-                    {viewMode === 'grid' ? 'View table' : 'View cards'}
+                    {viewMode === 'grid' ? 'View Table' : 'View Cards'}
                   </Button>
                 </Space>
               </div>
