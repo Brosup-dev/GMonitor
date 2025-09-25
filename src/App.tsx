@@ -152,6 +152,8 @@ function App() {
   } | null>(null);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  // Chế độ xem: 'grid' hoặc 'table'
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Custom notification function
   const showNotification = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
@@ -621,6 +623,28 @@ function App() {
     </Card>
   );
 
+  const sortedClients = [...clients].sort((a, b) => {
+  const normalize = (str: string) => str.toLowerCase().replace(/[_\-\s]/g, ""); 
+
+
+  const regex = /(.*?)(\d+)?$/;
+
+  const matchA = a.id.match(regex);
+  const matchB = b.id.match(regex);
+
+  const baseA = matchA ? normalize(matchA[1]) : normalize(a.id);
+  const baseB = matchB ? normalize(matchB[1]) : normalize(b.id);
+
+  if (baseA < baseB) return -1;
+  if (baseA > baseB) return 1;
+
+  // Nếu base giống nhau thì so số
+  const numA = matchA && matchA[2] ? parseInt(matchA[2], 10) : 0;
+  const numB = matchB && matchB[2] ? parseInt(matchB[2], 10) : 0;
+  return numA - numB;
+});
+
+
   return (
     <ConfigProvider
       theme={{
@@ -689,7 +713,6 @@ function App() {
           </Space>
           <Space>
             <Badge
-              // dot={isConnected}
               color={isConnected ? "#52c41a" : "#ff4d4f"}
             >
               <Button
@@ -812,7 +835,7 @@ function App() {
               </Card>
             </div>
 
-            {/* Client Grid Layout */}
+            {/* Client Management View Mode Switch + Table/Grid */}
             <div>
               <div style={{
                 display: "flex",
@@ -844,9 +867,16 @@ function App() {
                   >
                     Refresh
                   </Button>
+                  <Button
+                    type={viewMode === 'grid' ? 'default' : 'primary'}
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {viewMode === 'grid' ? 'View table' : 'View cards'}
+                  </Button>
                 </Space>
               </div>
-              
+              {/* Loading, Empty, Table, Grid */}
               {loading ? (
                 <div style={{ 
                   display: "grid", 
@@ -887,6 +917,94 @@ function App() {
                     </Text>
                   </div>
                 </Card>
+              ) : viewMode === 'table' ? (
+                <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'separate',
+                    borderSpacing: 0,
+                    background: isDark ? '#1a1a1a' : '#fff',
+                    borderRadius: 8,
+                    boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
+                    border: isDark ? '1px solid #444' : '1px solid #e2e8f0',
+                    overflow: 'hidden'
+                  }}>
+                    <thead>
+                      <tr style={{ background: isDark ? '#222' : '#f5f5f5', color: isDark ? '#e0e0e0' : '#333' }}>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>ID</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Hostname</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>IP</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Status</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>CPU (%)</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>RAM (%)</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Threads</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Jobs (OK/Fail/Pending/All)</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Last Update</th>
+                        <th style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 600 }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedClients.map(client => {
+                        const percent = client.jobs.all > 0 ? Math.round(((client.jobs.ok + client.jobs.fail) / client.jobs.all) * 100) : 0;
+                        return (
+                          <tr key={client.id} style={{ borderBottom: isDark ? '1px solid #444' : '1px solid #e2e8f0', color: isDark ? '#e0e0e0' : '#333', textAlign: 'center' }}>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontWeight: 500 }}>{client.id}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>{client.hostname}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>{client.ip}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>
+                              <Tag color={client.process_status === 'running' ? 'success' : 'default'}>
+                                {client.process_status.toUpperCase()}
+                              </Tag>
+                            </td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>{client.cpu.toFixed(1)}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>{client.ram.toFixed(1)}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>{client.threads}</td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>
+                              <span style={{ color: '#52c41a', fontWeight: 500 }}>{client.jobs.ok}</span> /
+                              <span style={{ color: '#ff4d4f', fontWeight: 500 }}>{client.jobs.fail}</span> /
+                              <span style={{ color: '#faad14', fontWeight: 500 }}>{client.jobs.remaining}</span> /
+                              <span style={{ color: '#1890ff', fontWeight: 600 }}>{client.jobs.all}</span>
+                              <br />
+                              <span style={{ fontSize: '11px', color: percent > 80 ? '#ff4d4f' : percent > 60 ? '#faad14' : '#52c41a', fontWeight: 500 }}>
+                                Progress: {percent}% 
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0', fontSize: '12px' }}>
+                              {new Date(client.last_update).toLocaleString("vi-VN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            </td>
+                            <td style={{ padding: '8px', border: isDark ? '1px solid #444' : '1px solid #e2e8f0' }}>
+                              <Space>
+                                <Tooltip title={client.process_status === 'running' ? 'Stop Client' : 'Start Client'}>
+                                  <Button
+                                    type={client.process_status === 'running' ? 'default' : 'primary'}
+                                    icon={client.process_status === 'running' ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+                                    onClick={() => {}}
+                                    disabled={true}
+                                    size="small"
+                                    style={{
+                                      color: client.process_status === 'running' ? '#ff4d4f' : '#52c41a',
+                                      borderColor: client.process_status === 'running' ? '#ff4d4f' : '#52c41a'
+                                    }}
+                                  />
+                                </Tooltip>
+                                <Tooltip title="Export Data">
+                                  <Button
+                                    type="text"
+                                    icon={<DownloadOutlined />}
+                                    onClick={() => {}}
+                                    size="small"
+                                    disabled={true}
+                                    style={{ color: '#1890ff' }}
+                                  />
+                                </Tooltip>
+                              </Space>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <div style={{ 
                   display: "grid", 
@@ -894,7 +1012,7 @@ function App() {
                   gap: "16px",
                   gridAutoRows: "max-content"
                 }}>
-                  {clients.map((client) => (
+                  {sortedClients.map((client) => (
                     <ClientCard key={client.id} client={client} />
                   ))}
                 </div>
@@ -902,8 +1020,7 @@ function App() {
             </div>
           </div>
         </Content>
-
-        {/* Footer */}
+         {/* Footer */}
         <Footer
           style={{
             textAlign: "center",
